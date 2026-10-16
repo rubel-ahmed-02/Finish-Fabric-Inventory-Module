@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sun Cherry Fabric Inventory</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f27;--mu:#6b7280;--bd:#e3e6eb;--ac:#c2185b;--ac2:#fde7f0;--in:#15803d;--out:#b45309;--bad:#b91c1c;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141a;--card:#1c1f27;--tx:#e8eaee;--mu:#9aa1ad;--bd:#2d313b;--ac:#f06292;--ac2:#3a1b29;--in:#4ade80;--out:#fbbf24;--bad:#f87171;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12141a;--card:#1c1f27;--tx:#e8eaee;--mu:#9aa1ad;--bd:#2d313b;--ac:#f06292;--ac2:#3a1b29;--in:#4ade80;--out:#fbbf24;--bad:#f87171;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:12px 16px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+h1{font-size:17px;margin:0 0 8px}h1 span{color:var(--ac)}
+nav{display:flex;gap:6px;overflow-x:auto}
+nav button{border:1px solid var(--bd);background:none;color:var(--tx);padding:6px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;font:inherit}
+nav button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+main{padding:16px;max-width:1300px;margin:auto}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.k{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px}.k b{display:block;font-size:22px}.k small{color:var(--mu)}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px}
+.c h2{font-size:14px;margin:0 0 10px}
+.bar{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px}.bar i{display:block;height:10px;border-radius:3px;background:var(--ac)}.bar .l{width:130px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+input,select,button.b{font:inherit;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx)}
+button.b{cursor:pointer;background:var(--ac);color:#fff;border-color:var(--ac)}button.b.s{background:var(--card);color:var(--tx);border-color:var(--bd)}
+.w{overflow-x:auto;border:1px solid var(--bd);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{padding:6px 9px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--bd)}
+th{background:var(--ac2);position:sticky;top:0}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.in{color:var(--in)}.out{color:var(--out)}.neg{color:var(--bad);font-weight:600}
+.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.f label{display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:3px}
+.m{color:var(--mu);font-size:12px;margin:6px 0}.msg{padding:8px 12px;border-radius:8px;background:var(--ac2);margin-bottom:10px}
+</style><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script></head><body>
+<header><h1><span>Sun Cherry</span> · Finished Fabric Inventory</h1>
+<nav id="nav"></nav></header>
+<main id="v"></main>
+<script>
+/* ====== SETUP: paste your two Supabase values here (see README) ====== */
+const SUPABASE_URL='PASTE_YOUR_SUPABASE_URL_HERE';
+const SUPABASE_KEY='PASTE_YOUR_SUPABASE_ANON_KEY_HERE';
+/* ===================================================================== */
+(function(){
+let sb,uid,prof={name:'',role:'view'},ok;const READY=new Promise(r=>ok=r);
+const ov=h=>{let o=document.getElementById('ov');if(!o){o=document.createElement('div');o.id='ov';o.style.cssText='position:fixed;inset:0;z-index:99;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px';document.body.appendChild(o)}o.innerHTML=h;return o};
+if(SUPABASE_URL.indexOf('PASTE')===0||typeof supabase==='undefined'){ov('<div class="c" style="max-width:420px"><h2>Setup needed</h2><p>Open <b>index.html</b>, paste your Supabase URL and key at the top of the script, and upload it again. See README.md. (If you did this already, check your internet connection.)</p></div>');window.claude={use:async()=>null};return}
+sb=window.sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+async function after(session){uid=session.user.id;const r=await sb.from('profiles').select('name,role').eq('id',uid).single();if(r.data)prof=r.data;const o=document.getElementById('ov');if(o)o.remove();ok()}
+function login(){const o=ov('<form class="c" style="max-width:360px;width:100%;margin:0"><h2 style="font-size:18px">Sun Cherry Fabric Inventory</h2><div class="f" style="grid-template-columns:1fr;margin-bottom:10px"><label>Email<input id="lE" type="email" autocomplete="username" required></label><label>Password<input id="lP" type="password" autocomplete="current-password" required></label></div><p class="m neg" id="lM"></p><button class="b" type="submit" style="width:100%">Sign in</button><p class="m">Forgot your password? Ask your admin to reset it.</p></form>');
+ o.querySelector('form').onsubmit=async e=>{e.preventDefault();const m=document.getElementById('lM');m.textContent='';const r=await sb.auth.signInWithPassword({email:document.getElementById('lE').value.trim(),password:document.getElementById('lP').value});if(r.error){m.textContent='Wrong email or password.';return}after(r.data.session)}}
+sb.auth.getSession().then(r=>r.data.session?after(r.data.session):login());
+const T={opening:()=>sb.from('opening').select('id,rows').order('id'),history:()=>sb.from('history').select('n,z').order('n'),txns:()=>sb.from('txns').select('id,d,by,ts')};
+const wrap=(n,r)=>({id:String(r.id!==undefined?r.id:r.n),data:()=>n==='opening'?{rows:r.rows,n:r.id}:n==='history'?{z:r.z,n:r.n}:Object.assign({},r.d,{by:r.by,ts:Number(r.ts)})});
+const get=async n=>{const r=await T[n]();if(r.error)throw r.error;return{docs:r.data.map(x=>wrap(n,x))}};
+const DB={collection:n=>({get:()=>get(n),
+ onSnapshot:(cb,ecb)=>{const run=()=>get(n).then(cb).catch(e=>ecb&&ecb(e));run();const ch=sb.channel('rt-'+n).on('postgres_changes',{event:'*',schema:'public',table:n},run).subscribe();return()=>sb.removeChannel(ch)},
+ add:async d=>{const r=await sb.from(n).insert({d,by:uid,ts:d.ts||Date.now()}).select('id').single();if(r.error)throw r.error;return{id:r.data.id}}}),
+ doc:p=>{const[n,id]=p.split('/');return{set:async d=>{const r=await sb.from(n).update({d}).eq('id',id).select('id');if(r.error)throw r.error;if(!r.data.length)throw new Error('Not allowed')},
+  delete:async()=>{const r=await sb.from(n).delete().eq('id',id).select('id');if(r.error)throw r.error;if(!r.data.length)throw new Error('Not allowed')}}}};
+const U={me:async()=>({id:uid,name:prof.name||'User'}),id:async()=>uid,canEdit:async()=>prof.role==='admin',isOwner:async()=>prof.role==='admin',can:async()=>prof.role!=='view',
+ profiles:async ids=>{const r=await sb.from('profiles').select('id,name').in('id',ids);return Object.fromEntries((r.data||[]).map(p=>[p.id,{name:p.name}]))}};
+const D={save:async({filename,data})=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data]));a.download=filename;document.body.appendChild(a);a.click();a.remove();return{status:'saved'}}};
+window.claude={use:async n=>{await READY;return({db:DB,user:U,downloads:D})[n]||null}};
+window.loadTeam=async()=>{const el=document.getElementById('team');if(!el)return;const r=await sb.from('profiles').select('id,email,name,role').order('email');if(r.error){el.textContent='Could not load users.';return}
+ const opt=(v,l,c)=>'<option value="'+v+'"'+(v===c?' selected':'')+'>'+l+'</option>';
+ el.innerHTML='<div class="w"><table><tr><th>Email</th><th>Name</th><th>Role</th></tr>'+r.data.map(p=>'<tr><td>'+esc(p.email)+'</td><td><input value="'+esc(p.name)+'" onchange="setProf(\''+p.id+'\',{name:this.value})"></td><td><select onchange="setProf(\''+p.id+'\',{role:this.value})">'+opt('admin','Admin',p.role)+opt('store','Storekeeper',p.role)+opt('view','Viewer',p.role)+'</select></td></tr>').join('')+'</table></div>'};
+window.setProf=async(id,patch)=>{const r=await sb.from('profiles').update(patch).eq('id',id);alert(r.error?'Could not save: '+r.error.message:'Saved.')};
+window.chPw=async()=>{const p=prompt('New password (at least 6 characters):');if(!p)return;const r=await sb.auth.updateUser({password:p});alert(r.error?r.error.message:'Password changed.')};
+window.seedData=async()=>{const say=t=>document.getElementById('sd').textContent=t,fo=document.getElementById('fo').files[0],fh=document.getElementById('fh').files[0];if(!fo||!fh){say('Choose both files first.');return}
+ try{const op=JSON.parse(await fo.text()),hi=JSON.parse(await fh.text());let i=0;const tot=op.length+hi.length;
+ for(const c of op){const r=await sb.from('opening').upsert(c);if(r.error)throw r.error;say('Loading… '+(++i)+'/'+tot)}
+ for(const c of hi){const r=await sb.from('history').upsert(c);if(r.error)throw r.error;say('Loading… '+(++i)+'/'+tot)}
+ say('Done. Refresh the page.')}catch(e){say('Failed: '+(e.message||e))}};
+window.SEEDCARD='<div class="c"><h2>Load starting data (one time)</h2><p class="m">Choose <b>opening.json</b> and <b>history.json</b> from your private data folder.</p><div class="tb"><input type="file" id="fo" accept=".json"><input type="file" id="fh" accept=".json"><button class="b" onclick="seedData()">Load</button></div><p class="m" id="sd"></p></div>';
+})();
+</script>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const f0=n=>Math.round(n).toLocaleString(),f1=n=>(Math.round(n*10)/10).toLocaleString();
+const TABS=[['dash','Dashboard'],['stock','Stock'],['entry','New Entry'],['ledger','Database'],['data','Admin']];
+const IN=['Receive Import/Local','Receive From SETL','Receive From Inhouse Dyeing','Receive From Sub Cont Dyeing','Receive From Sub Cont Aop','Return From IAL','Left over (Extra Found)','Stock Correction (+)'];
+const OUT=['Issue To IAL (Cutting)','Issue To SETL','Issue To ICL','Issue To Reprocess','Issue To Lab & Qc','Issue To Left Over','Issue To Sub Cont Aop','Stock Correction (-)'];
+const FLD=['Date','Type','Party','Challan','Buyer','Order','FabricType','Construction','Dia','GSM','Color','Batch','Warehouse','Rack','Roll','Kg','Mtr','Remarks'];
+const LBL={FabricType:'Fabric Type',Party:'Factory / Supplier / Section',Challan:'Invoice / Challan No',Order:'Order / IAL No',Color:'Color / Code',Kg:'Qty (kg)',Mtr:'Qty (mtr)',Roll:'Qty (roll)'};
+let L=[],S=[],tab='dash',q='',fb='',only=true,lq='',msg='',dir='IN',pre={};
+const nz=x=>String(x??'').toLowerCase().replace(/[^a-z0-9]/g,''),SK=r=>[nz(r.Buyer),nz(r.Order),nz(r.Color),nz(r.Batch),Math.round(+r.Dia||0),Math.round(+r.GSM||0)].join('|');
+function build(){const m=new Map();for(const r of L){const k=SK(r);let s=m.get(k);if(!s){s={k,Buyer:r.Buyer,Order:r.Order,FabricType:r.FabricType,Construction:r.Construction,Dia:r.Dia,GSM:r.GSM,Color:r.Color,Batch:r.Batch,Warehouse:r.Warehouse,Rack:'',R:0,Kg:0,Mtr:0};m.set(k,s)}
+ const g=r.Dir==='IN'?1:-1;s.R+=g*r.Roll;s.Kg+=g*r.Kg;s.Mtr+=g*r.Mtr;if(r.Dir==='IN'&&r.Rack)s.Rack=r.Rack}
+ S=[...m.values()];for(const s of S){s.Kg=Math.round(s.Kg*100)/100;s.Mtr=Math.round(s.Mtr*100)/100}}
+const live=s=>s.R>0||s.Kg>0.5;
+/* shared database + login */
+const mine=r=>!!r.by&&(r.by===ME||r.by===me.id);
+let ME='',EID=null,HFIX=null,FIX=new Set(),HIST=[],HL=0,DB,U,me={},ADMIN=false,CANW=false,OPEN=[],TX=[],NM={};
+const norm=r=>{for(const k of['Roll','Kg','Mtr'])r[k]=+r[k]||0;for(const k of['Dia','GSM'])r[k]=r[k]===''||r[k]==null?'':String(+r[k]);return r};
+const rebuild=()=>{FIX=new Set(TX.filter(t=>t.fixes!=null).map(t=>t.fixes));L=OPEN.concat(TX.flatMap(t=>t.rev?[t,{...t.rev,Dir:t.rev.Dir==='IN'?'OUT':'IN',Type:'Stock Correction (reversal)'}]:[t]));build()};
+async function names(){const ids=[...new Set(TX.map(r=>r.by).filter(Boolean))].filter(i=>!NM[i]);if(!ids.length)return;try{const p=await U.profiles(ids);for(const i of ids)NM[i]=(p[i]&&p[i].name)||'Someone'}catch(e){}}
+/* views */
+function go(t){if(t!=='entry'){EID=null;HFIX=null}tab=t;nav();draw()}
+function nav(){$('#nav').innerHTML=TABS.filter(t=>t[0]!=='entry'||CANW).map(([k,n])=>`<button class="${k===tab?'on':''}" onclick="go('${k}')">${n}</button>`).join('')+`<span class="m" style="align-self:center;margin-left:auto">${esc(me.name||'')}</span><button onclick="sb.auth.signOut().then(()=>location.reload())">Sign out</button>`}
+function draw(){const v=$('#v');v.innerHTML=(msg?`<div class="msg">${esc(msg)}</div>`:'')+(!L.length&&tab!=='data'&&tab!=='entry'?empty():VIEW[tab]());msg=''}
+const empty=()=>`<div class="c"><h2>No data yet</h2><p>No stock has been loaded into the shared database yet. Ask the owner of this page to load the opening stock.</p></div>`;
+const VIEW={
+dash(){const live_=S.filter(live),kg=live_.reduce((a,s)=>a+s.Kg,0),ro=live_.reduce((a,s)=>a+s.R,0),mt=live_.reduce((a,s)=>a+s.Mtr,0);
+ const by={};for(const s of live_)by[s.Buyer||'(none)']=(by[s.Buyer||'(none)']||0)+s.Kg;const top=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,8),mx=top[0]?top[0][1]:1;
+ const mo={};for(const r of L){const m=String(r.Date).slice(0,7);if(!m)continue;(mo[m]=mo[m]||{i:0,o:0})[r.Dir==='IN'?'i':'o']+=r.Kg}
+ const ms=Object.keys(mo).sort().slice(-6),mm=Math.max(1,...ms.map(m=>Math.max(mo[m].i,mo[m].o)));
+ const neg=S.filter(s=>s.R<0||s.Kg<-0.5).length;
+ return `<div class="c"><h2>Convert to Excel</h2><div class="tb"><button class="b" onclick="exportXLS(false)">Stock summary (in stock only)</button><button class="b s" onclick="exportXLS(true)">All batches (incl. fully issued)</button></div><p class="m" id="xs">Same columns as your Summary sheet. Uses the full history, so the first export loads it (a few seconds).</p></div><div class="g"><div class="k"><small>Stock (kg)</small><b>${f0(kg)}</b></div><div class="k"><small>Stock (rolls)</small><b>${f0(ro)}</b></div><div class="k"><small>Stock (mtr)</small><b>${f0(mt)}</b></div><div class="k"><small>Batches in stock</small><b>${f0(live_.length)}</b></div><div class="k"><small>Database lines</small><b>${f0(L.length)}</b></div><div class="k"><small>Negative-balance batches</small><b class="${neg?'neg':''}">${neg}</b></div></div>
+ <div class="c"><h2>Stock by buyer (kg)</h2>${top.map(([b,v])=>`<div class="bar"><span class="l">${esc(b)}</span><i style="width:${Math.max(2,v/mx*60)}%"></i>${f0(v)}</div>`).join('')}</div>
+ <div class="c"><h2>Receive vs Issue by month (kg)</h2>${ms.map(m=>`<div class="bar"><span class="l">${m}</span><div style="flex:1"><div class="bar"><i style="background:var(--in);width:${mo[m].i/mm*70}%"></i><span class="in">${f0(mo[m].i)}</span></div><div class="bar"><i style="background:var(--out);width:${mo[m].o/mm*70}%"></i><span class="out">${f0(mo[m].o)}</span></div></div></div>`).join('')}</div>`},
+stock(){const b=[...new Set(S.map(s=>s.Buyer))].sort(),t=q.toLowerCase();
+ const rows=S.filter(s=>(!only||live(s))&&(!fb||s.Buyer===fb)&&(!t||[s.Order,s.FabricType,s.Color,s.Batch,s.Rack,s.Buyer].join(' ').toLowerCase().includes(t)));
+ const tot=rows.reduce((a,s)=>(a.r+=s.R,a.k+=s.Kg,a.m+=s.Mtr,a),{r:0,k:0,m:0});
+ return `<div class="tb"><input id="q" placeholder="Search order, color, batch, rack…" value="${esc(q)}" oninput="q=this.value;clearTimeout(window.T);window.T=setTimeout(()=>{draw();$('#q').focus();$('#q').setSelectionRange(q.length,q.length)},250)">
+ <select onchange="fb=this.value;draw()"><option value="">All buyers</option>${b.map(x=>`<option ${x===fb?'selected':''}>${esc(x)}</option>`).join('')}</select>
+ <label><input type="checkbox" ${only?'checked':''} onchange="only=this.checked;draw()"> In stock only</label>
+ <button class="b s" onclick="copyStock()">Copy table (for Excel)</button></div>
+ <div class="m"><b>${f0(rows.length)}</b> batches · <b>${f0(tot.r)}</b> rolls · <b>${f0(tot.k)}</b> kg · <b>${f0(tot.m)}</b> mtr ${rows.length>300?'(showing first 300)':''}</div>
+ <div class="w"><table><tr><th>Buyer</th><th>Order</th><th>Fabric</th><th>Constr.</th><th class="n">Dia</th><th class="n">GSM</th><th>Color</th><th>Batch</th><th>Rack</th><th class="n">Roll</th><th class="n">Kg</th><th class="n">Mtr</th><th></th></tr>
+ ${rows.slice(0,300).map(s=>`<tr><td>${esc(s.Buyer)}</td><td>${esc(s.Order)}</td><td>${esc(s.FabricType)}</td><td>${esc(s.Construction)}</td><td class="n">${esc(s.Dia)}</td><td class="n">${esc(s.GSM)}</td><td>${esc(s.Color)}</td><td>${esc(s.Batch)}</td><td>${esc(s.Rack)}</td><td class="n ${s.R<0?'neg':''}">${f0(s.R)}</td><td class="n ${s.Kg<-0.5?'neg':''}">${f1(s.Kg)}</td><td class="n">${f0(s.Mtr)}</td><td>${CANW?`<button class="b s" onclick="issue('${S.indexOf(s)}')">Issue</button>`:''}</td></tr>`).join('')}</table></div>`},
+entry(){const dl=(id,a)=>`<datalist id="${id}">${a.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`,u=k=>[...new Set(S.map(s=>s[k]).filter(Boolean))].slice(0,3000);
+ const p=Object.assign({Date:new Date().toISOString().slice(0,10),Warehouse:'Sun Cherry'},pre);pre={};
+ const types=[...(p.Type&&!(IN.includes(p.Type)||OUT.includes(p.Type))?[p.Type]:[]),...(dir==='IN'?IN:OUT)];
+ return `<div class="c"><h2>${HFIX!==null?'Correct old record (reverses the old line and adds the corrected one)':EID?'Edit transaction':'New stock transaction'}</h2><div class="tb" style="${EID||HFIX!==null?'display:none':''}"><button class="b ${dir==='IN'?'':'s'}" onclick="dir='IN';draw()">Receive (IN)</button><button class="b ${dir==='OUT'?'':'s'}" onclick="dir='OUT';draw()">Issue (OUT)</button></div>
+ <div class="f">${FLD.map(k=>{const l=LBL[k]||k,num=['Roll','Kg','Mtr','Dia','GSM'].includes(k);
+  if(k==='Type')return `<label>Transaction Type<select id="e_Type">${types.map(t=>`<option ${t===p.Type?'selected':''}>${t}</option>`).join('')}</select></label>`;
+  const ls={Buyer:'dB',Order:'dO',FabricType:'dF',Color:'dC',Party:'dP',Warehouse:'dW'}[k];
+  return `<label>${l}<input id="e_${k}" ${k==='Date'?'type="date"':num?'type="number" step="any"':''} ${ls?`list="${ls}"`:''} value="${esc(p[k]??'')}"></label>`}).join('')}</div>
+ ${dl('dB',u('Buyer'))}${dl('dO',u('Order'))}${dl('dF',u('FabricType'))}${dl('dC',u('Color'))}${dl('dP',[...new Set(L.slice(-20000).map(r=>r.Party).filter(Boolean))])}${dl('dW',['Sun Cherry','Dhanshiri'])}
+ <p class="m" id="em"></p><button class="b" onclick="addEntry()">${EID||HFIX!==null?'Save changes':'Save transaction'}</button>${EID||HFIX!==null?` <button class="b s" onclick="go('ledger')">Cancel</button>`:''}</div>`},
+ledger(){const t=lq.toLowerCase(),rows=[],A=HIST.concat(TX);for(let i=A.length-1;i>=0&&rows.length<300;i--){const r=A[i];if(!t||[r.Order,r.Buyer,r.Color,r.Batch,r.Challan,r.Party,r.Type].join(' ').toLowerCase().includes(t))rows.push([r,i])}
+ return `<div class="tb"><input id="lq" placeholder="Search challan, order, batch, party…" value="${esc(lq)}" oninput="lq=this.value;clearTimeout(window.T);window.T=setTimeout(()=>{draw();const e=$('#lq');e.focus();e.setSelectionRange(lq.length,lq.length)},300)"><button class="b s" onclick="loadHist()" ${HL?'disabled':''}>${HL===1?'Loading history…':HL===2?'History loaded ('+f0(HIST.length)+')':'Load old history (2023–2026)'}</button><span class="m">Latest 300 matching lines (newest first)</span></div>
+ <div class="w"><table><tr><th>Date</th><th>Dir</th><th>Type</th><th>Party</th><th>Challan</th><th>Buyer</th><th>Order</th><th>Fabric</th><th>Color</th><th>Batch</th><th class="n">Roll</th><th class="n">Kg</th><th class="n">Mtr</th><th>By</th><th></th></tr>
+ ${rows.map(([r,i])=>`<tr><td>${esc(r.Date)}</td><td class="${r.Dir==='IN'?'in':'out'}">${r.Dir}</td><td>${esc(r.Type)}</td><td>${esc(r.Party)}</td><td>${esc(r.Challan)}</td><td>${esc(r.Buyer)}</td><td>${esc(r.Order)}</td><td>${esc(r.FabricType)}</td><td>${esc(r.Color)}</td><td>${esc(r.Batch)}</td><td class="n">${f0(r.Roll)}</td><td class="n">${f1(r.Kg)}</td><td class="n">${f0(r.Mtr)}</td><td>${esc(NM[r.by]||'')}</td><td>${r.id&&(ADMIN||mine(r))?`<button class="b s" onclick="edit('${r.id}')">Edit</button> <button class="b s" onclick="del('${r.id}')">Delete</button>`:(!r.id&&CANW&&i<HIST.length?(FIX.has(i)?'<span class="m">corrected</span>':`<button class="b s" onclick="edit('H:${i}')">Edit</button>`):'')}</td></tr>`).join('')}</table></div>`},
+data(){const r=['Viewer: can see stock and history','Contributor: can also record receive/issue transactions','Editor / Owner: can also delete anyone\'s entries'];
+ return `<div class="c"><h2>Your access</h2><p>Signed in as <b>${esc(me.name||'You')}</b> — ${ADMIN?'Admin (can delete any entry)':CANW?'Can record transactions':'Read-only'}</p></div>
+ <div class="c"><h2>Shared database</h2><p>${f0(OPEN.length)} opening-stock batches · ${f0(TX.length)} transactions recorded since go-live · ${f0(new Set(TX.map(t=>t.by)).size)} users have recorded entries.</p></div>
+ ${ADMIN?SEEDCARD:''}<div class="c"><h2>Team &amp; roles</h2><div id="team" class="m">${ADMIN?'Loading…':'Only admins can manage users.'}</div><p class="m">${ADMIN?'To add a person: Supabase dashboard → Authentication → Users → Add user (email + password, tick Auto Confirm). They then appear here so you can set their role.':''}</p></div><div class="c"><h2>My password</h2><button class="b s" onclick="chPw()">Change my password</button></div>${(ADMIN&&setTimeout(loadTeam,0),'')}`}};
+function issue(i){const s=S[+i];pre={Buyer:s.Buyer,Order:s.Order,FabricType:s.FabricType,Construction:s.Construction,Dia:s.Dia,GSM:s.GSM,Color:s.Color,Batch:s.Batch,Warehouse:s.Warehouse,Rack:s.Rack,Roll:s.R,Kg:s.Kg,Mtr:s.Mtr};dir='OUT';go('entry')}
+async function addEntry(){const r={Dir:dir};for(const k of FLD)r[k]=$('#e_'+k).value.trim();norm(r);const e=$('#em');
+ if(!CANW){e.textContent='You have read-only access.';return}
+ if(!r.Date||!r.Buyer||!r.Order||!r.Color||!r.Batch){e.textContent='Date, Buyer, Order, Color and Batch are required.';return}
+ if(!r.Roll&&!r.Kg){e.textContent='Enter roll and/or kg quantity.';return}
+ if(dir==='OUT'&&HFIX===null&&!(EID&&(TX.find(x=>x.id===EID)||{}).rev)){const s=S.find(x=>x.k===SK(r));if(!s){e.textContent='No stock found for this buyer/order/color/batch/dia/GSM. Use “Issue” from the Stock tab.';return}
+  const o=EID&&TX.find(x=>x.id===EID),bk=o&&o.Dir==='OUT'&&SK(o)===SK(r),aR=s.R+(bk?o.Roll:0),aK=s.Kg+(bk?o.Kg:0);
+  if(r.Roll>aR||r.Kg>aK+0.01){e.textContent=`Issue exceeds available balance (${f0(aR)} roll / ${f1(aK)} kg).`;return}}
+ try{if(EID){const o=TX.find(x=>x.id===EID);if(!o||!(ADMIN||mine(o))){e.textContent='You can only edit your own entries.';return}await DB.doc('txns/'+EID).set({...r,...(o.rev?{rev:o.rev,fixes:o.fixes}:{}),by:o.by,ts:o.ts,edited:Date.now(),editedBy:ME||me.id||''});EID=null;msg='Entry corrected.';go('ledger')}else if(HFIX!==null){const h=HIST[HFIX];await DB.collection('txns').add({...r,rev:{...h},fixes:HFIX,by:ME||me.id||'',ts:Date.now()});HFIX=null;msg='Old record corrected; stock updated.';go('ledger')}else{await DB.collection('txns').add({...r,by:ME||me.id||'',ts:Date.now()});msg='Transaction saved.';go('stock')}}catch(x){e.textContent='Could not save: '+(x.message||x.code)}}
+async function loadHist(){if(HL)return;HL=1;draw();try{const sn=await DB.collection('history').get();const d=[...sn.docs].sort((a,b)=>a.data().n-b.data().n);for(const x of d){const b=Uint8Array.from(atob(x.data().z),c=>c.charCodeAt(0)),rs=await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).json();for(const a of rs)HIST.push(norm({Date:a[0],Type:a[1],Party:a[2],Challan:a[3],Buyer:a[4],Order:a[5],FabricType:a[6],Construction:a[7],Dia:a[8],GSM:a[9],Color:a[10],Batch:a[11],Warehouse:a[12],Rack:a[13],Remarks:a[14],Dir:a[15],Roll:a[16],Kg:a[17],Mtr:a[18]}))}HL=2}catch(e){HL=0;msg='Could not load history: '+(e.message||e.code)}draw()}
+function edit(id){if(id.startsWith('H:')){const h=HIST[+id.slice(2)];if(!h)return;EID=null;HFIX=+id.slice(2);dir=h.Dir;pre=h;return go('entry')}const r=TX.find(x=>x.id===id);if(!r)return;HFIX=null;EID=id;dir=r.Dir;pre=r;go('entry')}
+
+async function exportXLS(all){const say=t=>{const e=$('#xs');if(e)e.textContent=t};
+ if(typeof XLSX==='undefined'){say('The Excel library could not load. Check your internet and refresh.');return}
+ let D=null;try{D=await claude.use('downloads')}catch(e){}
+ if(!D){say('File download is not available in this view.');return}
+ say('Preparing… loading history');if(!HL)await loadHist();while(HL===1)await new Promise(r=>setTimeout(r,200));
+ if(HL!==2){say('Could not load history.');return}
+ const m=new Map(),disp=(s,r)=>{for(const k of['Buyer','Order','FabricType','Construction','Dia','GSM','Color','Batch','Warehouse'])s[k]=r[k]};
+ const add=(r,g)=>{const k=SK(r);let s=m.get(k);if(!s){s={iR:0,iK:0,iM:0,oR:0,oK:0,oM:0,Rack:'',hi:0};disp(s,r);m.set(k,s)}
+  if(r.Dir==='IN'){if(!s.hi){disp(s,r);s.hi=1}s.iR+=g*r.Roll;s.iK+=g*r.Kg;s.iM+=g*r.Mtr;if(r.Rack&&g>0)s.Rack=r.Rack}else{s.oR+=g*r.Roll;s.oK+=g*r.Kg;s.oM+=g*r.Mtr}};
+ for(const r of HIST)add(r,1);for(const t of TX){add(t,1);if(t.rev)add(t.rev,-1)}
+ const q=x=>Math.round(x*100)/100,nm=x=>x===''||x==null||isNaN(+x)?x:+x;
+ let rows=[...m.values()].map(s=>({...s,bR:q(s.iR-s.oR),bK:q(s.iK-s.oK)}));
+ if(!all)rows=rows.filter(s=>s.bR>0||s.bK>0.5);
+ rows.sort((a,b)=>[a.Buyer,a.Order,a.FabricType,a.Color,a.Batch].join('|').localeCompare([b.Buyer,b.Order,b.FabricType,b.Color,b.Batch].join('|')));
+ const H=['Buyer Name','ORDER/IALNO','STYLE NO','FABRIC TYPE','FABRIC CONSTRUCTION','DIA','GSM','FABRIC COLOR/CODE','BATCH NO','WAREHOUSE LOCATION','RACK/BIN NO2','RECEIVE QTY(Roll)','RECEIVE QTY(kg)','RECEIVE QTY(mtr)','ISSUE QTY(Roll)','ISSUE QTY(kg)','BALANCE QTY(Roll)','BALANCE QTY(kg)'];
+ const data=rows.map(s=>[s.Buyer,s.Order,'(blank)',s.FabricType,s.Construction,nm(s.Dia),nm(s.GSM),s.Color,nm(s.Batch),s.Warehouse,nm(s.Rack),s.iR,q(s.iK),Math.round(s.iM),s.oR,q(s.oK),s.bR,s.bK]);
+ const n=data.length,last=n+3,tot=['TOTAL',...Array(10).fill('')];
+ const cols='LMNOPQR'.split('');const sums=[[11,'iR'],[12,'iK'],[13,'iM'],[14,'oR'],[15,'oK'],[16,'bR'],[17,'bK']];
+ const trow=Array(18).fill('');trow[0]='TOTAL (visible rows)';
+ for(const [ci,key] of sums){const L_=String.fromCharCode(65+ci);const v=rows.reduce((a,s)=>a+(key==='iM'?s.iM:s[key]),0);trow[ci]={t:'n',v:q(v),f:`SUBTOTAL(9,${L_}4:${L_}${last})`}}
+ const ws=XLSX.utils.aoa_to_sheet([['Sun Cherry — Finished Fabric Stock Summary ('+new Date().toISOString().slice(0,10)+')'],trow,H,...data]);
+ ws['!cols']=[22,14,10,16,12,6,6,22,16,14,10,10,12,12,10,12,10,12].map(w=>({wch:w}));
+ ws['!autofilter']={ref:`A3:R${last}`};
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Summary');
+ try{const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  await D.save({filename:`Sun_Cherry_Stock_Summary_${new Date().toISOString().slice(0,10)}.xlsx`,data:buf});
+  say(`Exported ${f0(n)} batches${all?' (all)':' (in stock)'}.`)}catch(e){say(e&&e.code==='declined'?'Download cancelled.':'Could not save the file: '+((e&&(e.message||e.code))||e))}}
+async function del(id){const r=TX.find(x=>x.id===id);if(r&&r.id&&confirm('Delete this entry?')){try{await DB.doc('txns/'+r.id).delete()}catch(e){msg='Delete failed: '+(e.message||e.code);draw()}}}
+async function copyStock(){const t=q.toLowerCase(),h=['Buyer','Order','FabricType','Construction','Dia','GSM','Color','Batch','Rack','R','Kg','Mtr'];
+ const rows=S.filter(s=>(!only||live(s))&&(!fb||s.Buyer===fb)&&(!t||[s.Order,s.FabricType,s.Color,s.Batch,s.Rack,s.Buyer].join(' ').toLowerCase().includes(t)));
+ const tx=[h.join('\t'),...rows.map(s=>h.map(k=>s[k]).join('\t'))].join('\n');
+ try{await navigator.clipboard.writeText(tx);msg='Copied '+f0(rows.length)+' rows. Paste into Excel.'}catch(e){msg='Clipboard blocked by the browser.'}draw()}
+(async()=>{
+ try{DB=await claude.use('db');U=await claude.use('user')}catch(e){}
+ if(!DB||!U){nav();$('#v').innerHTML='<div class="c"><h2>Please sign in</h2><p>This inventory is shared. Sign in to your claude.ai account (the account your administrator invited) and reopen this page.</p></div>';return}
+ try{me=await U.me();try{ME=(await U.id())||me.id||''}catch(e){ME=me.id||''}ADMIN=!!((await U.canEdit())||(await U.isOwner()));CANW=(await U.can('data.write'))!==false}catch(e){}
+ nav();$('#v').innerHTML='<div class="c">Loading shared stock…</div>';
+ try{const sn=await DB.collection('opening').get();sn.docs.forEach(d=>(d.data().rows||[]).forEach(a=>OPEN.push(norm({Date:'',Type:'Opening Balance',Dir:'IN',Party:'',Challan:'',Remarks:'',Buyer:a[0],Order:a[1],FabricType:a[2],Construction:a[3],Dia:a[4],GSM:a[5],Color:a[6],Batch:a[7],Warehouse:a[8],Rack:a[9],Roll:a[10],Kg:a[11],Mtr:a[12]}))))}catch(e){}
+ rebuild();draw();
+ DB.collection('txns').onSnapshot(async sn=>{TX=sn.docs.map(d=>({...d.data(),id:d.id,man:1})).sort((a,b)=>(a.ts||0)-(b.ts||0));await names();rebuild();if(tab!=='entry')draw()},e=>{msg='Live updates unavailable: '+(e.message||e.code)});
+})();
+</script></body></html>
